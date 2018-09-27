@@ -64,12 +64,16 @@ def main():
                     if user_text[0] == commands['tipTGM']:
                         if len(user_text) == 3:
                             user_text[1] = user_text[1].strip('@')
-                            response = bot.tipTGM(update, user_text)
-                            if response.status_code == 201:
-                                bot.sendMessage(bot.getChatID(update), "You sent {} Tangrams to {}".format(user_text[2], user_text[1]))
-                                bot.sendMessage(bot.getChatID_Link(update), "User {} Sent you {} Tangs".format('@'+bot.getUsername(update), user_text[2]))
+                            print(bot.getLinkByUsername(user_text[1]))
+                            if bot.getLinkByUsername(user_text[1]) != 'None':
+                                response = bot.tipTGM(update, user_text)
+                                if response.status_code == 201:
+                                    bot.sendMessage(bot.getChatID(update), "You sent {} Tangrams to {}".format(user_text[2], user_text[1]))
+                                    bot.sendMessage(bot.getChatID_Link(update), "User {} Sent you {} Tangs".format('@'+bot.getUsername(update), user_text[2]))
+                                else:
+                                    bot.sendMessage(bot.getChatID(update), response.json()['message'])
                             else:
-                                bot.sendMessage(bot.getChatID(update), response.json()['message'])
+                                bot.sendMessage(bot.getChatID(update), "Your destinatary is not registered.. Receiving Tangram requires talking to @Tangram_Bot First!")
                         else:
                             bot.sendMessage(bot.getChatID(update), "Internal server error")
 
