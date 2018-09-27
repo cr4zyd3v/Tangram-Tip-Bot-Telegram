@@ -92,7 +92,7 @@ class botHandler():
 
 
     def claimTGM(self, update):
-        method = '/actor/wallet/reward'
+        method = 'actor/wallet/reward'
         payload = {
                     "identifier": "{}".format(self.dbChecker('identifier', self.getUsername(update))),
                     "password": "{}".format(self.password),

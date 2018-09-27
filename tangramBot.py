@@ -88,9 +88,11 @@ def main():
                         else:
                             bot.sendMessage(bot.getChatID(update), "Internal server error")
 
-                    elif user_text[0] == commands['claimTGM,']:
+                    elif user_text[0] == commands['claimTGM']:
                         if len(user_text) == 1:
                             bot.claimTGM(update)
+                            msg = 'You claimed 10 Tangrams'
+                            bot.sendMessage(bot.getChatID(update), msg)
                         else:
                             bot.sendMessage(bot.getChatID(update), "Internal server error")
 
