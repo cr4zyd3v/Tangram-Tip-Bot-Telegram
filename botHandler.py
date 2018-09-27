@@ -22,7 +22,6 @@ class botHandler():
 
     def getUrl(self, method, payload = ""):
         request = requests.get(self.url+method, params = payload)
-        print(request.url)
         return request.json()
 
     def getUpdates(self, offset=None, timeout=30):
@@ -44,6 +43,10 @@ class botHandler():
         chat_id = update['message']['chat']['id']
         return chat_id
 
+    def getChatID_Link(self, update):
+        chat_id = self.dbChecker('chat_id', self.getUsername(update))
+        return chat_id
+
     def sendMessage(self, chat_id, text):
         params = {
                "chat_id": chat_id,
@@ -62,7 +65,7 @@ class botHandler():
     def getLinkByUsername(self, username):
         link = self.dbChecker('address', username)
         return link
-
+        
 #-- Tangram API
         
     def tangramRequest(self, method, payload):
@@ -71,20 +74,20 @@ class botHandler():
                    "Authorization":self.alpha_api_token,
                    "Content-Type":"application/json"}
         r = requests.post(url+method, headers=headers, json=payload)
-        print(r.json())
-        return r.json()
+        pprint(r.json())
+        return r
 
 
     def accountAPI(self):
         method = 'actor/wallet/create'
         payload = {'password': self.password}
-        account = self.tangramRequest(method, payload)
+        account = self.tangramRequest(method, payload).json()
         return account
 
     def walletAPI(self, account):
         method = 'actor/wallet/address'
         payload = {'identifier': account['id'], 'password': self.password}
-        wallet = self.tangramRequest(method, payload)
+        wallet = self.tangramRequest(method, payload).json()
         return wallet
 
 
@@ -96,14 +99,12 @@ class botHandler():
                       "account": "{}".format(self.dbChecker('address', self.getUsername(update))),
                       "change": "{}".format(self.dbChecker('address', self.getUsername(update))),
                       "link": "{}".format(self.getLinkByUsername(user_text[1])),
-                      "amount": "{}".format(int(user_text[2]))
+                      "amount": "{}".format(user_text[2])
                    }
-        print('\n')
-        print('\n')
-        print(payload)
-        print('\n')
-        print('\n')
-        self.tangramRequest(method, payload)
+
+        response = self.tangramRequest(method, payload)
+        print(response.json(), '\n\n')
+        return response
 
     def balTGM(self, update):
         method = 'actor/wallet/balance'
@@ -112,8 +113,7 @@ class botHandler():
                       "password": "{}".format(self.password),
                       "address": "{}".format(self.dbChecker('address', self.getUsername(update)))
                   }
-        print(payload)
-        balance = self.tangramRequest(method, payload)
+        balance = self.tangramRequest(method, payload).json()
         
         return balance
     
@@ -128,11 +128,13 @@ class botHandler():
                       "password": "{}".format(self.password),
                       "account": "{}".format(self.dbChecker('address', self.getUsername(update))),
                       "change": "{}".format(self.dbChecker('address', self.getUsername(update))),
-                      "link": "{}".format(str(user_text[1])),
-                      "amount": "{}".format(int(user_text[2]))
+                      "link": "{}".format(user_text[1]),
+                      "amount": "{}".format(user_text[2])
                     }
 
-        self.tangramRequest(method, payload)
+        response = self.tangramRequest(method, payload).json()
+        
+        return response
 
 
 #-- Database
@@ -145,37 +147,53 @@ class botHandler():
                                             account_name VARCHAR(255) NOT NULL UNIQUE,
                                             identifier VARCHAR(255) NOT NULL UNIQUE,
                                             password VARCHAR(255) NOT NULL,
-                                            address VARCHAR(255) NOT NULL UNIQUE
+                                            address VARCHAR(255) NOT NULL UNIQUE,
+                                            chat_id INTEGER NOT NULL UNIQUE
                                           )
                   '''
 
         self.cursor.execute(command)
         self.conn.commit()
-    
+        
+    def isRegistered(self, update):
+        try:
+            user = self.dbChecker('account_name', self.getUsername(update))
+            if self.getUsername(update) == user:
+                return True
+            else:
+                msg = "You are not registered.. Type /start"
+                self.sendMessage(self.getChatID(update), msg)
+                return False
+            
+        except Exception as e:
+            print(e)
+            return False
+        
     def accountReg(self, update):
         account = self.accountAPI()
         account_name = update['message']['chat']['username']
         identifier = account['id']
         password = self.password
         address = self.walletAPI(account)['address']
-
+        chat_id = update['message']['chat']['id']
         command = """
-                    INSERT INTO accounts (account_name, identifier, password, address)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO accounts (account_name, identifier, password, address, chat_id)
+                    VALUES (?, ?, ?, ?, ?)
         
                   """
         try:
-            self.cursor.execute(command, (account_name, identifier, password, address))
+            self.cursor.execute(command, (account_name, identifier, password, address, chat_id))
             self.conn.commit()
-            return "You have been successfully registered"
+            return "Welcome to the Tangram tip bot!\nType /help to see all commands"
 
-        except:
-            "User already registered "
+        except Exception as e:
+            print(e)
+            return "User already registered "
             
-    def dbChecker(self, select, where):
-        command = """ SELECT {} FROM accounts WHERE account_name = ? """.format(str(select))
+    def dbChecker(self, select, where):   
+        command = """ SELECT %s FROM accounts WHERE account_name = ? """
         
-        r = self.cursor.execute(command, (where,))
+        r = self.cursor.execute(command %(select), (where,))
         return ("%s" % r.fetchone())
     
 
