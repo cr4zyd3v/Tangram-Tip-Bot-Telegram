@@ -69,8 +69,9 @@ def main():
                             if bot.getLinkByUsername(user_text[1]) != 'None':
                                 response = bot.tipTGM(update, user_text)
                                 if response.status_code == 201:
+                                    print(bot.getChatID_Link(user_text[1]))
                                     bot.sendMessage(bot.getChatID(update), "You sent {} Tangrams to {}".format(user_text[2], user_text[1]))
-                                    bot.sendMessage(bot.getChatID_Link(update), "User {} Sent you {} Tangs".format('@'+bot.getUsername(update), user_text[2]))
+                                    bot.sendMessage(bot.getChatID_Link(user_text[1]), "User {} Sent you {} Tangs".format('@'+bot.getUsername(update), user_text[2]))
                                 else:
                                     bot.sendMessage(bot.getChatID(update), response.json()['message'])
                             else:

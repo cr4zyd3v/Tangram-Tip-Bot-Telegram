@@ -43,8 +43,8 @@ class botHandler():
         chat_id = update['message']['chat']['id']
         return chat_id
 
-    def getChatID_Link(self, update):
-        chat_id = self.dbChecker('chat_id', self.getUsername(update))
+    def getChatID_Link(self, username):
+        chat_id = self.dbChecker('chat_id', username)
         return chat_id
 
     def sendMessage(self, chat_id, text):
