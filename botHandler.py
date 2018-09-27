@@ -91,6 +91,17 @@ class botHandler():
         return wallet
 
 
+    def claimTGM(self, update):
+        method = '/actor/wallet/reward'
+        payload = {
+                    "identifier": "{}".format(self.dbChecker('identifier', self.getUsername(update))),
+                    "password": "{}".format(self.password),
+                    "address": "{}".format(self.dbChecker('address', self.getUsername(update))),
+                    "amount": 10
+                    }
+        response = self.tangramRequest(method, payload)
+        return response
+
     def tipTGM(self, update, user_text):
         method = 'actor/wallet/transfer/funds'
         payload = {
@@ -103,7 +114,7 @@ class botHandler():
                    }
 
         response = self.tangramRequest(method, payload)
-        print(response.json(), '\n\n')
+        print(response.json(), '')
         return response
 
     def balTGM(self, update):

@@ -22,7 +22,8 @@ def main():
             'depositTGM': '/deposit',
             'withdrawTGM': '/withdraw',
             'accountReg': '/start',
-            'helpTGM':  '/help'
+            'helpTGM':  '/help',
+            'claimTGM': '/claim'
         }
 
     messages = {
@@ -86,6 +87,13 @@ def main():
                             bot.sendMessage(bot.getChatID(update), msg)
                         else:
                             bot.sendMessage(bot.getChatID(update), "Internal server error")
+
+                    elif user_text[0] == commands['claimTGM,']:
+                        if len(user_text) == 1:
+                            bot.claimTGM(update)
+                        else:
+                            bot.sendMessage(bot.getChatID(update), "Internal server error")
+
                             
                 # (1 arg) param[0] == command
                 # request account deposit address (user public address)
