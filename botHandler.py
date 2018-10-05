@@ -22,49 +22,69 @@ class botHandler():
 
     def getUrl(self, method, payload = ""):
         request = requests.get(self.url+method, params = payload)
-        return request.json()
+        return request
 
-    def getUpdates(self, offset=None, timeout=30):
+    def getUpdates(self, offset=None, timeout=50):
         method = 'getUpdates'
         payload = {"offset": offset, 'timeout': timeout}
-        while True:
-            updates  = self.getUrl(method, payload)
-            if updates['ok'] == True:
-                updates = updates['result']
-                if len(updates) > 0:
-                    return updates
+        try:    
+            while True:
+                updates  = self.getUrl(method, payload).json()
+                if updates['ok'] == True:
+                    updates = updates['result']
+                    pprint(updates)
+                    if len(updates) > 0:
+                        return updates
                 else:
-                    print('listening...')
-            else:
-                print('Service unavaible')
-
+                    print('Service unavaible')
+        except Exception as e:
+            print(e)
 
     def getChatID(self, update):
         chat_id = update['message']['chat']['id']
         return chat_id
 
+    #should be ID_link instead chat
     def getChatID_Link(self, username):
-        chat_id = self.dbChecker('chat_id', username)
+        chat_id = self.dbChecker('user_chat_id', username)
         return chat_id
 
-    def sendMessage(self, chat_id, text):
+    def isGroup(self, update):
+        if update != False:
+            if update['message']['chat']['type'] == 'group' or update['message']['chat']['type'] == 'supergroup':
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def sendMessage(self, chat_id, text, update = False):
+        if self.isGroup(update):
+            text = "@{} ".format(self.getUsername(update))+text
+
         params = {
                "chat_id": chat_id,
                "text": text
             }
-        message = self.getUrl("sendMessage?", params)
+        message = self.getUrl("sendMessage?", params).json()
         
     def getText(self, update):
-        user_text = update['message']['text']
-        return user_text
-
+        if 'text' in update['message'].keys():
+            user_text = update['message']['text']
+            return user_text
+        else:
+            return False
     def getUsername(self, update):
-        username = update['message']['chat']['username']
+        username = update['message']['from']['username'].lower()
         return username
 
     def getLinkByUsername(self, username):
         link = self.dbChecker('address', username)
         return link
+
+    def infoBot(self, update):
+        username = self.getUsername(update)
+        return "{} ==> {}".format(username, self.getText(update))
         
 #-- Tangram API
         
@@ -74,7 +94,6 @@ class botHandler():
                    "Authorization":self.alpha_api_token,
                    "Content-Type":"application/json"}
         r = requests.post(url+method, headers=headers, json=payload)
-        pprint(r.json())
         return r
 
 
@@ -99,7 +118,7 @@ class botHandler():
                     "address": "{}".format(self.dbChecker('address', self.getUsername(update))),
                     "amount": 10
                     }
-        response = self.tangramRequest(method, payload)
+        response = self.tangramRequest(method, payload).json()
         return response
 
     def tipTGM(self, update, user_text):
@@ -112,9 +131,8 @@ class botHandler():
                       "link": "{}".format(self.getLinkByUsername(user_text[1])),
                       "amount": "{}".format(user_text[2])
                    }
-
+        # !! json() decode in tangramBot (checking for status code)
         response = self.tangramRequest(method, payload)
-        print(response.json(), '')
         return response
 
     def balTGM(self, update):
@@ -139,12 +157,11 @@ class botHandler():
                       "password": "{}".format(self.password),
                       "account": "{}".format(self.dbChecker('address', self.getUsername(update))),
                       "change": "{}".format(self.dbChecker('address', self.getUsername(update))),
-                      "link": "{}".format(user_text[1]),
-                      "amount": "{}".format(user_text[2])
+                      "link": "{}".format(user_text[2]),
+                      "amount": "{}".format(user_text[1])
                     }
-
-        response = self.tangramRequest(method, payload).json()
-        
+        # !! json() decode in tangramBot (checking for status code)
+        response = self.tangramRequest(method, payload)
         return response
 
 
@@ -159,7 +176,7 @@ class botHandler():
                                             identifier VARCHAR(255) NOT NULL UNIQUE,
                                             password VARCHAR(255) NOT NULL,
                                             address VARCHAR(255) NOT NULL UNIQUE,
-                                            chat_id INTEGER NOT NULL UNIQUE
+                                            user_chat_id INTEGER NOT NULL UNIQUE
                                           )
                   '''
 
@@ -172,34 +189,37 @@ class botHandler():
             if self.getUsername(update) == user:
                 return True
             else:
-                msg = "You are not registered.. Type /start"
-                self.sendMessage(self.getChatID(update), msg)
+                text = "You are not registered.. Type /start"
+                if self.isGroup(update):
+                    text = "@{} ".format(self.getUsername(update))+text
+
+                self.sendMessage(self.getChatID(update), text)
                 return False
             
         except Exception as e:
+            print('$$$$$')
             print(e)
             return False
         
     def accountReg(self, update):
         account = self.accountAPI()
-        account_name = update['message']['chat']['username']
+        account_name = self.getUsername(update)
         identifier = account['id']
         password = self.password
         address = self.walletAPI(account)['address']
-        chat_id = update['message']['chat']['id']
+        user_chat_id = update['message']['from']['id']
         command = """
-                    INSERT INTO accounts (account_name, identifier, password, address, chat_id)
+                    INSERT INTO accounts (account_name, identifier, password, address, user_chat_id)
                     VALUES (?, ?, ?, ?, ?)
         
                   """
         try:
-            self.cursor.execute(command, (account_name, identifier, password, address, chat_id))
+            self.cursor.execute(command, (account_name, identifier, password, address, user_chat_id))
             self.conn.commit()
             return "Welcome to the Tangram tip bot!\nType /help to see all commands"
 
-        except Exception as e:
-            print(e)
-            return "User already registered "
+        except:
+            return "User already registered\n/help to check all commands"
             
     def dbChecker(self, select, where):   
         command = """ SELECT %s FROM accounts WHERE account_name = ? """
