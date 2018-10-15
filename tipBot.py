@@ -1,9 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
 import sqlite3
 import requests
-from pprint import pprint
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, RegexHandler
 
@@ -18,10 +17,7 @@ conn = sqlite3.connect(db_name, check_same_thread=False)
 cursor = conn.cursor()
 
 
-logging.basicConfig(level=logging.WARNING,
-                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # -- Tangram api
 
@@ -50,7 +46,6 @@ def balance(bot, update):
                     "password": "{}".format(password),
                     "address": "{}".format(dbChecker('address', username))
         }
-        pprint(payload)
         balance_resp = tangramRequest(method, payload).json()
 
         bot.send_message(chat_id=update.message.from_user.id, text="You have: {} Tangrams".format(balance_resp['balance']))
@@ -93,7 +88,7 @@ def tip(bot, update, args):
                 bot.send_message(chat_id=update.message.from_user.id, text="❌ {}".format(response.json()['message']))
 
         else:
-            bot.send_message(chat_id=update.message.from_user.id, text="Your destinatary is not registered.. Receiving Tangram requires talking to @Tangram_Bot First!")
+            bot.send_message(chat_id=update.message.from_user.id, text="❌ Your destinatary is not registered.. Receiving Tangram requires talking to @Tangram_TipBot First!")
 
 
 def deposit(bot, update):
