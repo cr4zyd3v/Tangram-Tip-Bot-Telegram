@@ -17,10 +17,11 @@ conn = sqlite3.connect(db_name, check_same_thread=False)
 cursor = conn.cursor()
 
 
-logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='log.txt', filemode='a', level=logging.WARNING, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # -- Tangram api
 
+logging.info("Running Tip Bot")
 
 def start(bot, update):
 
@@ -82,18 +83,18 @@ def tip(bot, update, args):
 
             response = tangramRequest(method, payload)
             if response.status_code == 201:
-                bot.send_message(chat_id=update.message.from_user.id, text="✅ You sent {} Tangrams to {}".format(args[1], args[0]))
+                bot.send_message(chat_id=update.message.chat_id, text="✅ @{} sent {} Tangrams to @{}".format(update.message.from_user.username, args[1], args[0].strip('@')))
                 bot.sendMessage(chat_id=getChatIDByUsername(args[0]), text="✅ User {} Sent you {} Tangs".format('@'+update.message.from_user.username, args[1]))
             else:
-                bot.send_message(chat_id=update.message.from_user.id, text="❌ {}".format(response.json()['message']))
+                bot.send_message(chat_id=update.message.chat_id, text="❌ {}".format(response.json()['message']))
 
         else:
-            bot.send_message(chat_id=update.message.from_user.id, text="❌ Your destinatary is not registered.. Receiving Tangram requires talking to @Tangram_TipBot First!")
+            bot.send_message(chat_id=update.message.chat_id, text="❌ Your destinatary is not registered.. Receiving Tangram requires talking to @Tangram_TipBot First!")
 
 
 def deposit(bot, update):
     if isRegistered(bot, update):
-        username = update.message.from_user.username.lower()
+        username = update.message.from_user.username
         wallet = getLinkByUsername(username)
         bot.send_message(chat_id=update.message.from_user.id, text="Your deposit address is: {}".format(wallet))
 
