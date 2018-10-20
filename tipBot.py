@@ -68,8 +68,11 @@ def claim(bot, update):
 
 
 def tip(bot, update, args):
+	tip_ammount = args[0]
+	tip_username = args[1]
+
     if isRegistered(bot, update) and checkArgLen(bot, update, args):
-        if getChatIDByUsername(args[0]) != 'None':
+        if getChatIDByUsername(tip_username) != 'None':
             username = update.message.from_user.username.lower()
             method = 'actor/wallet/transfer/funds'
             payload = {
@@ -77,14 +80,14 @@ def tip(bot, update, args):
                           "password": "{}".format(password),
                           "account": "{}".format(dbChecker('address', username)),
                           "change": "{}".format(dbChecker('address', username)),
-                          "link": "{}".format(getLinkByUsername(args[0])),
-                          "amount": "{}".format(args[1])
+                          "link": "{}".format(getLinkByUsername(tip_username)),
+                          "amount": "{}".format(tip_ammount)
                        }
 
             response = tangramRequest(method, payload)
             if response.status_code == 201:
-                bot.send_message(chat_id=update.message.chat_id, text="✅ @{} sent {} Tangrams to @{}".format(update.message.from_user.username, args[1], args[0].strip('@')))
-                bot.sendMessage(chat_id=getChatIDByUsername(args[0]), text="✅ User {} Sent you {} Tangs".format('@'+update.message.from_user.username, args[1]))
+                bot.send_message(chat_id=update.message.chat_id, text="✅ @{} sent {} Tangrams to @{}".format(update.message.from_user.username, tip_ammount, tip_username.strip('@')))
+                bot.sendMessage(chat_id=getChatIDByUsername(tip_username), text="✅ User {} Sent you {} Tangs".format('@'+update.message.from_user.username, tip_ammount))
             else:
                 bot.send_message(chat_id=update.message.chat_id, text="❌ {}".format(response.json()['message']))
 
@@ -100,6 +103,9 @@ def deposit(bot, update):
 
 
 def withdraw(bot, update, args):
+	withdraw_address = args[1]
+	withdraw_ammount = args[0]
+	
     if isRegistered(bot, update) and checkArgLen(bot, update, args):
         username = update.message.from_user.username.lower()
         method = 'actor/wallet/transfer/funds'
@@ -108,8 +114,8 @@ def withdraw(bot, update, args):
                       "password": "{}".format(password),
                       "account": "{}".format(dbChecker('address', username)),
                       "change": "{}".format(dbChecker('address', username)),
-                      "link": "{}".format(args[0]),
-                      "amount": "{}".format(args[1])
+                      "link": "{}".format(withdraw_address),
+                      "amount": "{}".format(withdraw_ammount)
                     }
         response = tangramRequest(method, payload)
         if response.status_code == 201:
@@ -143,7 +149,7 @@ def click(bot, update):
     if isRegistered(bot, update):
         bot.send_message(chat_id=update.message.from_user.id, text="""
 ‼ WARNING ‼
-Do not use this tipbot as your main wallet! NEVER!\n
+Do not use this tipbot as your main wallet!\n
 Tangram official Website:
 https://tangrams.io/\n
 Tangram Telegrams:
