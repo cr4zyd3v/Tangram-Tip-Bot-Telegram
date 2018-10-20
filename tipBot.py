@@ -129,9 +129,9 @@ def help(bot, update):
         bot.send_message(chat_id=update.message.from_user.id,
                          text="""
 💳 - Send Tangrams:
-💳 - /tip [@username] [ammount]\n
+💳 - /tip [ammount] [@username]\n
 ➖ - Withdraw your Tangrams
-➖ - /withdraw [TGMadress] [ammount]\n
+➖ - /withdraw [ammount] [TGMadress]\n
 ➕ - Get your deposit address
 ➕ - /deposit\n
 💲 - Get your balance
