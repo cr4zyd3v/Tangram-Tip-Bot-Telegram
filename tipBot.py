@@ -252,7 +252,7 @@ def isRegistered(bot, update, command_check=True):
         if user != 'None':
             return True
         elif user == 'None' and command_check == True:
-            bot.send_message(chat_id=update.message.chat_id, text="❌ @{} - Talk to @Tangram_TipBot first"".format(update.message.from_user.username))
+            bot.send_message(chat_id=update.message.chat_id, text="❌ @{} - Talk to @Tangram_TipBot first".format(update.message.from_user.username))
             return False
         else:
             return False
