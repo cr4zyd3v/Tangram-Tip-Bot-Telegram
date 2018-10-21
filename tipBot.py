@@ -68,8 +68,8 @@ def claim(bot, update):
 
 
 def tip(bot, update, args):
-	tip_ammount = args[0]
-	tip_username = args[1]
+    tip_ammount = args[0]
+    tip_username = args[1]
 
     if isRegistered(bot, update) and checkArgLen(bot, update, args):
         if getChatIDByUsername(tip_username) != 'None':
@@ -103,8 +103,8 @@ def deposit(bot, update):
 
 
 def withdraw(bot, update, args):
-	withdraw_address = args[1]
-	withdraw_ammount = args[0]
+    withdraw_address = args[1]
+    withdraw_ammount = args[0]
 	
     if isRegistered(bot, update) and checkArgLen(bot, update, args):
         username = update.message.from_user.username.lower()
@@ -252,12 +252,12 @@ def isRegistered(bot, update, command_check=True):
         if user != 'None':
             return True
         elif user == 'None' and command_check == True:
-            bot.send_message(chat_id=update.message.from_user.id, text="You are not registered..\nType /start")
+            bot.send_message(chat_id=update.message.chat_id, text="❌ @{} - Talk to @Tangram_TipBot first"".format(update.message.from_user.username))
             return False
         else:
             return False
     else:
-        bot.send_message(chat_id=update.message.from_user.id, text="❌ You need to set an username before registering")
+        bot.send_message(chat_id=update.message.chat_id, text="❌ {} Set a Telegram username first".format(update.message.from_user.username))
 
 
 
